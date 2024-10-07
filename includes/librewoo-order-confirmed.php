@@ -1,15 +1,15 @@
 <?php
 // You shall not pass!
-if (!defined('ABSPATH')) {
-    exit;
+if (!defined("ABSPATH")) {
+    exit();
 }
 
 /**
  * Class WooOrderComplete
- * 
+ *
  * Triggers LibreSign API when an order is completed
- * 
- * 
+ *
+ *
  * @since 1.0.0
  */
 
@@ -17,13 +17,15 @@ class WooOrderComplete
 {
     public function __construct()
     {
-        add_action('woocommerce_order_status_processing', [$this, 'order_complete_message']);
+        add_action("woocommerce_order_status_processing", [
+            $this,
+            "order_complete_message",
+        ]);
     }
 
     public function order_complete_message($order_id)
     {
-
-        // Ensure the order ID is valid     
+        // Ensure the order ID is valid
         $order_id = absint($order_id);
 
         if (!$order_id) {
@@ -36,7 +38,7 @@ class WooOrderComplete
         /**
          * Get order data from WooCommerce order object
          * Data: customer name, customer email, purchased items
-         * 
+         *
          */
         $this->get_order_data(wc_get_order($order_id));
 
@@ -46,7 +48,7 @@ class WooOrderComplete
     /**
      * Get order data from WooCommerce order object
      * Data: customer name, customer email, purchased items
-     * 
+     *
      * @param WC_Order $order
      * @return stdClass
      * @since 1.0.0
@@ -64,17 +66,17 @@ class WooOrderComplete
         /// Loop through each order item
         foreach ($order->get_items() as $item_id => $item) {
             $woo_client_info->purchased_items[] = [
-                'id'       => $item->get_id(), // Product ID
-                'name'     => $item->get_name(), // Product name
-                'quantity' => $item->get_quantity(), // Quantity ordered
-                'total'    => wc_price($item->get_total()), // Total price (formatted with currency symbol)
+                "id" => $item->get_id(), // Product ID
+                "name" => $item->get_name(), // Product name
+                "quantity" => $item->get_quantity(), // Quantity ordered
+                "total" => wc_price($item->get_total()), // Total price (formatted with currency symbol)
             ];
         }
 
         return $woo_client_info;
     }
 
-    /**     
+    /**
      * Trigger LibreSign API
      * @return void
      * @since 1.0.0
@@ -83,16 +85,17 @@ class WooOrderComplete
     {
         //Convert stdClass to array
         $order_data = get_object_vars($order_data);
-        $email = $order_data['customer_email'];
-        $name = $order_data['customer_name'] . ' '. $order_data['customer_last_name'];         
-        $quota = $order_data['purchased_items'][0]['name'];
+        $email = $order_data["customer_email"];
+        $name =
+            $order_data["customer_name"] .
+            " " .
+            $order_data["customer_last_name"];
+        $quota = $order_data["purchased_items"][0]["name"];
         $this->librewoo_trigger_log($email, $name, $quota);
-  
-
     }
 
-     function librewoo_trigger_log($email,$name,$quota){
-
+    function librewoo_trigger_log($email, $name, $quota)
+    {
         // Validate email, name and quota
         $email ? $email : false;
         $name ? $name : false;
@@ -100,32 +103,27 @@ class WooOrderComplete
 
         // Logs
         if ($email && $name && $quota) {
-      
             error_log(
                 sprintf(
-                    'LibreSign: Name: %s Email: %s Quota: %s',
-                    $name, $email, $quota
+                    "LibreSign: Name: %s Email: %s Quota: %s",
+                    $name,
+                    $email,
+                    $quota
                 )
             );
         } else {
-            $variables = array(
-                'name' => $name,
-                'email' => $email,
-                'quota' => $quota
-            );
-                foreach ($variables as $key => $value) {
-                    if (!$value) {
-                        error_log(
-                            sprintf(
-                                'LibreSign: Missing %s',
-                                $key
-                            )
-                        );
-                    }
-                }   
+            $variables = [
+                "name" => $name,
+                "email" => $email,
+                "quota" => $quota,
+            ];
+            foreach ($variables as $key => $value) {
+                if (!$value) {
+                    error_log(sprintf("LibreSign: Missing %s", $key));
+                }
+            }
         }
 
         // TRIGGER LibreSign API HERE
-        
     }
 }

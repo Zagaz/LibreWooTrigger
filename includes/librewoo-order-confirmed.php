@@ -4,6 +4,8 @@ if (!defined("ABSPATH")) {
     exit();
 }
 
+include LW_PLUGIN_DIR . "includes/librewoo-api-endpoint.php";
+
 /**
  * Class WooOrderComplete
  *
@@ -86,44 +88,65 @@ class WooOrderComplete
         //Convert stdClass to array
         $order_data = get_object_vars($order_data);
         $email = $order_data["customer_email"];
-        $name =
+        $display_name =
             $order_data["customer_name"] .
             " " .
             $order_data["customer_last_name"];
         $quota = $order_data["purchased_items"][0]["name"];
-        $this->librewoo_trigger_log($email, $name, $quota);
+
+        $apps = $authorization = "Placeholder";
+
+
+        $apiCall = new LibreSignEndpoint(
+            $email,
+            $display_name,
+            $quota,
+            $apps,
+            $authorization
+        );
+
+        $apiCall->triggerAPI();
+
+        // $apiCaller->logData();
+
+
+    
+        // $this -> librewoo_trigger_log($email, $display_name, $quota);
+
     }
 
-    function librewoo_trigger_log($email, $name, $quota)
-    {
-        // Validate email, name and quota
-        $email ? $email : false;
-        $name ? $name : false;
-        $quota ? $quota : false;
+    // function librewoo_trigger_log($email, $name, $quota)
+    // {
 
-        // Logs
-        if ($email && $name && $quota) {
-            error_log(
-                sprintf(
-                    "LibreSign: Name: %s Email: %s Quota: %s",
-                    $name,
-                    $email,
-                    $quota
-                )
-            );
-        } else {
-            $variables = [
-                "name" => $name,
-                "email" => $email,
-                "quota" => $quota,
-            ];
-            foreach ($variables as $key => $value) {
-                if (!$value) {
-                    error_log(sprintf("LibreSign: Missing %s", $key));
-                }
-            }
-        }
+    //     // Validate email, name and quota
+    //     $email ? $email : false;
+    //     $name ? $name : false;
+    //     $quota ? $quota : false;
 
-        // TRIGGER LibreSign API HERE
-    }
+    //     // Logs
+    //     if ($email && $name && $quota) {
+
+    //         error_log(
+    //             sprintf(
+    //                 "LibreSign: Name: %s Email: %s Quota: %s",
+    //                 $name,
+    //                 $email,
+    //                 $quota
+    //             )
+    //         );
+    //         return true;
+    //     } else {
+    //         $variables = [
+    //             "name" => $name,
+    //             "email" => $email,
+    //             "quota" => $quota,
+    //         ];
+    //         foreach ($variables as $key => $value) {
+    //             if (!$value) {
+    //                 error_log(sprintf("LibreSign: Missing %s", $key));
+    //             }
+    //         }
+    //         return false;
+    //     }
+    // }
 }
